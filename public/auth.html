@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تسجيل الدخول - متجري</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Tajawal',sans-serif;background:#0a0a1a;color:#e8e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#particles-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.auth-container{position:relative;z-index:1;width:100%;max-width:430px;padding:20px}
+.auth-card{background:rgba(20,20,45,.88);backdrop-filter:blur(22px);border-radius:24px;border:1px solid rgba(255,107,157,.28);box-shadow:0 25px 60px rgba(0,0,0,.55),0 0 50px rgba(255,107,157,.12);padding:40px 34px;animation:cardIn .6s ease}
+@keyframes cardIn{from{opacity:0;transform:translateY(30px) scale(.95)}to{opacity:1;transform:none}}
+.logo{text-align:center;margin-bottom:26px}
+.logo h1{font-size:2.3rem;font-weight:800;background:linear-gradient(90deg,#ff6b9d,#c44dff,#00d4ff,#ff6b9d);background-size:300% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:grad 4s ease infinite}
+@keyframes grad{0%,100%{background-position:0%}50%{background-position:100%}}
+.logo p{color:#888;margin-top:6px}
+.tabs{display:flex;gap:6px;margin-bottom:26px;background:rgba(0,0,0,.3);border-radius:14px;padding:5px}
+.tab{flex:1;text-align:center;padding:12px;border-radius:10px;cursor:pointer;font-weight:600;color:#999;transition:.3s}
+.tab.active{background:linear-gradient(135deg,#ff6b9d,#c44dff);color:#fff;box-shadow:0 4px 15px rgba(255,107,157,.4)}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;margin-bottom:6px;color:#bbb;font-size:.9rem}
+.form-group input{width:100%;padding:14px 16px;border:1px solid rgba(255,107,157,.25);border-radius:12px;background:rgba(10,10,30,.6);color:#eee;font-family:inherit;font-size:1rem;transition:.25s}
+.form-group input:focus{outline:none;border-color:#ff6b9d;box-shadow:0 0 0 3px rgba(255,107,157,.2)}
+.btn-main{width:100%;padding:15px;background:linear-gradient(135deg,#ff6b9d,#c44dff);border:none;border-radius:12px;color:#fff;font-family:inherit;font-size:1.1rem;font-weight:700;cursor:pointer;transition:.3s;box-shadow:0 6px 20px rgba(255,107,157,.35);margin-top:6px}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(255,107,157,.5)}
+.btn-main:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.msg{margin-top:14px;padding:12px;border-radius:10px;text-align:center;font-size:.95rem;display:none}
+.msg.error{background:rgba(231,76,60,.15);color:#ff6b6b;display:block}
+.msg.success{background:rgba(16,172,132,.15);color:#10ac84;display:block}
+.msg.info{background:rgba(52,152,219,.15);color:#3498db;display:block}
+.hidden{display:none!important}
+.code-hint{background:rgba(255,107,157,.1);border:1px dashed rgba(255,107,157,.4);border-radius:10px;padding:12px;margin-bottom:14px;text-align:center;font-size:.9rem;color:#ff6b9d}
+</style>
+</head>
+<body>
+<canvas id="particles-canvas"></canvas>
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="logo"><h1>متجري</h1><p>سجّل حسابك عشان تدخل المتجر</p></div>
+    <div class="tabs" id="main-tabs">
+      <div class="tab active" data-tab="login">تسجيل الدخول</div>
+      <div class="tab" data-tab="register">إنشاء حساب</div>
+    </div>
+    <form id="login-form">
+      <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="login-email" required placeholder="example@email.com"></div>
+      <div class="form-group"><label>كلمة المرور</label><input type="password" id="login-password" required placeholder="••••••••"></div>
+      <button type="submit" class="btn-main">دخول</button>
+      <div class="msg" id="login-msg"></div>
+    </form>
+    <form id="register-form" class="hidden">
+      <div class="form-group"><label>اسم المستخدم</label><input type="text" id="reg-username" required placeholder="اسمك"></div>
+      <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="reg-email" required placeholder="example@email.com"></div>
+      <div class="form-group"><label>كلمة المرور</label><input type="password" id="reg-password" required minlength="6" placeholder="6 أحرف على الأقل"></div>
+      <button type="submit" class="btn-main">إنشاء حساب</button>
+      <div class="msg" id="reg-msg"></div>
+    </form>
+    <form id="verify-form" class="hidden">
+      <div class="code-hint" id="code-hint">أدخل كود التحقق</div>
+      <div class="form-group"><label>كود التحقق</label><input type="text" id="verify-code" required maxlength="6" placeholder="000000" style="text-align:center;font-size:1.5rem;letter-spacing:10px"></div>
+      <button type="submit" class="btn-main">تفعيل الحساب</button>
+      <div class="msg" id="verify-msg"></div>
+    </form>
+  </div>
+</div>
+<script>
+const API='';
+let pendingEmail='';
+const canvas=document.getElementById('particles-canvas'),ctx=canvas.getContext('2d');
+let w,h,particles=[];
+const colors=['#ff6b9d','#c44dff','#00d4ff','#ff9f43','#10ac84'];
+function resize(){w=canvas.width=innerWidth;h=canvas.height=innerHeight}
+resize();addEventListener('resize',resize);
+for(let i=0;i<55;i++)particles.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,size:Math.random()*2.5+1,color:colors[Math.floor(Math.random()*colors.length)]});
+function animate(){ctx.clearRect(0,0,w,h);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>w)p.vx*=-1;if(p.y<0||p.y>h)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=p.color;ctx.globalAlpha=.55;ctx.fill()});ctx.globalAlpha=1;requestAnimationFrame(animate)}
+animate();
+// if already logged in → go to shop
+(async()=>{const t=localStorage.getItem('user_token');if(!t)return;try{const r=await fetch(API+'/api/auth/me',{headers:{'X-User-Token':t}});const d=await r.json();if(d.logged_in)location.href='index.html'}catch{}})();
+document.querySelectorAll('.tab').forEach(tab=>{tab.onclick=()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');const n=tab.dataset.tab;document.getElementById('login-form').classList.toggle('hidden',n!=='login');document.getElementById('register-form').classList.toggle('hidden',n!=='register');document.getElementById('verify-form').classList.add('hidden');document.getElementById('main-tabs').classList.remove('hidden')}});
+function showMsg(id,text,type){const el=document.getElementById(id);el.textContent=text;el.className='msg '+type}
+document.getElementById('register-form').onsubmit=async e=>{e.preventDefault();const btn=e.target.querySelector('button');btn.disabled=true;const body={username:document.getElementById('reg-username').value.trim(),email:document.getElementById('reg-email').value.trim(),password:document.getElementById('reg-password').value};try{const res=await fetch(API+'/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await res.json();if(res.ok){pendingEmail=body.email;document.getElementById('register-form').classList.add('hidden');document.getElementById('main-tabs').classList.add('hidden');document.getElementById('verify-form').classList.remove('hidden');let h='أدخل كود التحقق';if(data.debug_code)h+=' (للاختبار: <b>'+data.debug_code+'</b>)';document.getElementById('code-hint').innerHTML=h;showMsg('verify-msg',data.message,'info')}else showMsg('reg-msg',data.error||'خطأ','error')}catch{showMsg('reg-msg','خطأ اتصال','error')}btn.disabled=false};
+document.getElementById('verify-form').onsubmit=async e=>{e.preventDefault();const btn=e.target.querySelector('button');btn.disabled=true;try{const res=await fetch(API+'/api/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:pendingEmail,code:document.getElementById('verify-code').value.trim()})});const data=await res.json();if(res.ok){localStorage.setItem('user_token',data.token);showMsg('verify-msg','تم التفعيل! جاري الدخول...','success');setTimeout(()=>location.href='index.html',900)}else showMsg('verify-msg',data.error||'خطأ','error')}catch{showMsg('verify-msg','خطأ اتصال','error')}btn.disabled=false};
+document.getElementById('login-form').onsubmit=async e=>{e.preventDefault();const btn=e.target.querySelector('button');btn.disabled=true;try{const res=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('login-email').value.trim(),password:document.getElementById('login-password').value})});const data=await res.json();if(res.ok){localStorage.setItem('user_token',data.token);showMsg('login-msg','تم الدخول!','success');setTimeout(()=>location.href='index.html',700)}else if(data.need_verify){pendingEmail=document.getElementById('login-email').value.trim();document.getElementById('login-form').classList.add('hidden');document.getElementById('main-tabs').classList.add('hidden');document.getElementById('verify-form').classList.remove('hidden');showMsg('verify-msg',data.error,'info')}else showMsg('login-msg',data.error||'خطأ','error')}catch{showMsg('login-msg','خطأ اتصال','error')}btn.disabled=false};
+</script>
+</body>
+</html>

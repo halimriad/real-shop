@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>متجري - تسوق أونلاين</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    .user-area { display:flex; align-items:center; gap:10px; }
+    .user-avatar {
+      width:36px; height:36px; border-radius:50%; object-fit:cover;
+      border:2px solid #ff6b9d; background:#1a1a2e; cursor:pointer;
+    }
+    .user-name { color:#ff6b9d; font-weight:600; cursor:pointer; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    /* Profile Modal */
+    .profile-modal {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:300;
+      align-items:center; justify-content:center; backdrop-filter:blur(6px);
+    }
+    .profile-modal.show { display:flex; }
+    .profile-box {
+      background:rgba(20,20,45,.95); border-radius:20px; padding:32px;
+      width:90%; max-width:420px; border:1px solid rgba(255,107,157,.3);
+      box-shadow:0 20px 50px rgba(0,0,0,.5); animation:cardIn .4s ease;
+    }
+    @keyframes cardIn { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:none} }
+    .profile-box h3 { margin-bottom:20px; background:linear-gradient(90deg,#ff6b9d,#c44dff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .profile-avatar-wrap { text-align:center; margin-bottom:20px; }
+    .profile-avatar-wrap img {
+      width:100px; height:100px; border-radius:50%; object-fit:cover;
+      border:3px solid #5865F2; background:#111;
+    }
+    .profile-box .form-group { margin-bottom:14px; }
+    .profile-box label { display:block; margin-bottom:6px; color:#aaa; font-size:.9rem; }
+    .profile-box input, .profile-box textarea {
+      width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(255,107,157,.25);
+      background:rgba(10,10,30,.6); color:#eee; font-family:inherit; font-size:1rem;
+    }
+    .profile-actions { display:flex; gap:10px; margin-top:18px; }
+    .profile-actions button { flex:1; }
+  </style>
+</head>
+<body>
+  <canvas id="particles-canvas"></canvas>
+
+  <header>
+    <div class="container header-content">
+      <div class="logo">
+        <h1>متجري</h1>
+        <span>تسوق بثقة</span>
+      </div>
+      <nav>
+        <a href="index.html" class="active">الرئيسية</a>
+        <a href="admin.html">لوحة التحكم</a>
+      </nav>
+      <div class="user-area" id="user-area" style="display:none;">
+        <img id="header-avatar" class="user-avatar" src="" alt="avatar" onclick="openProfile()">
+        <span class="user-name" id="header-name" onclick="openProfile()">—</span>
+        <a href="#" id="logout-btn" style="color:#ff6b9d;font-size:.9rem;">خروج</a>
+      </div>
+      <div class="cart-icon" onclick="toggleCart()">
+        🛒 <span id="cart-count">0</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h2>مرحباً بك في متجرنا</h2>
+      <p>تجربة تسوق فاخرة مع تأثيرات تفاعلية. حرّك الماوس وشاهد السحر.</p>
+    </section>
+
+    <section class="products-section">
+      <h2 class="section-title">منتجاتنا</h2>
+      <div id="products-grid" class="products-grid">
+        <p class="empty-msg">جاري تحميل المنتجات...</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- سلة التسوق -->
+  <div id="cart-sidebar" class="cart-sidebar">
+    <div class="cart-header">
+      <h3>سلة التسوق</h3>
+      <button onclick="toggleCart()" class="close-btn">×</button>
+    </div>
+    <div id="cart-items" class="cart-items"></div>
+    <div class="cart-footer">
+      <div class="cart-total">المجموع: <span id="cart-total">0</span> ر.س</div>
+      <div id="checkout-form" style="display:none; margin-top:15px;">
+        <input type="text" id="cust-name" placeholder="اسمك" style="width:100%;margin-bottom:8px;padding:10px;border-radius:6px;border:1px solid #ddd;">
+        <input type="text" id="cust-phone" placeholder="رقم الجوال" style="width:100%;margin-bottom:8px;padding:10px;border-radius:6px;border:1px solid #ddd;">
+      </div>
+      <button class="checkout-btn" onclick="checkout()">إتمام الشراء</button>
+    </div>
+  </div>
+  <div id="overlay" class="overlay" onclick="toggleCart()"></div>
+
+  <!-- Profile Modal -->
+  <div class="profile-modal" id="profile-modal">
+    <div class="profile-box">
+      <h3>إعدادات الحساب</h3>
+      <div class="profile-avatar-wrap">
+        <img id="profile-avatar-preview" src="" alt="avatar">
+        <div style="margin-top:10px;">
+          <input type="file" id="profile-avatar-input" accept="image/*" style="display:none">
+          <button type="button" class="btn-secondary" onclick="document.getElementById('profile-avatar-input').click()" style="font-size:.9rem;">تغيير الصورة</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>الاسم الظاهر</label>
+        <input type="text" id="profile-display-name" placeholder="اسمك">
+      </div>
+      <div class="form-group">
+        <label>البريد الإلكتروني</label>
+        <input type="email" id="profile-email" readonly style="opacity:.7">
+      </div>
+      <div class="form-group">
+        <label>اسم المستخدم</label>
+        <input type="text" id="profile-username" readonly style="opacity:.7">
+      </div>
+      <div class="profile-actions">
+        <button class="btn-secondary" onclick="closeProfile()">إغلاق</button>
+        <button class="btn-primary" onclick="saveProfile()">حفظ التغييرات</button>
+      </div>
+      <p id="profile-msg" style="margin-top:12px;text-align:center;color:#ff6b9d;"></p>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <p>© 2026 متجري - يعمل بقاعدة بيانات SQLite حقيقية</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    // Force login
+    (async function() {
+      const token = localStorage.getItem('user_token');
+      if (!token) {
+        location.href = 'auth.html';
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/me', { headers: { 'X-User-Token': token } });
+        const data = await res.json();
+        if (!data.logged_in) {
+          localStorage.removeItem('user_token');
+          location.href = 'auth.html';
+          return;
+        }
+        // show user
+        document.getElementById('user-area').style.display = 'flex';
+        document.getElementById('header-name').textContent = data.display_name || data.username;
+        const av = document.getElementById('header-avatar');
+        av.src = data.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+        window.currentUser = data;
+      } catch {
+        location.href = 'auth.html';
+      }
+    })();
+
+    function openProfile() {
+      const u = window.currentUser;
+      if (!u) return;
+      document.getElementById('profile-display-name').value = u.display_name || u.username || '';
+      document.getElementById('profile-email').value = u.email || '';
+      document.getElementById('profile-username').value = u.username || '';
+      document.getElementById('profile-avatar-preview').src = u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+      document.getElementById('profile-msg').textContent = '';
+      document.getElementById('profile-modal').classList.add('show');
+    }
+    function closeProfile() {
+      document.getElementById('profile-modal').classList.remove('show');
+    }
+
+    let pendingAvatar = null;
+    document.getElementById('profile-avatar-input').onchange = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        pendingAvatar = ev.target.result;
+        document.getElementById('profile-avatar-preview').src = pendingAvatar;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    async function saveProfile() {
+      const token = localStorage.getItem('user_token');
+      const body = {
+        display_name: document.getElementById('profile-display-name').value.trim()
+      };
+      if (pendingAvatar) body.avatar = pendingAvatar;
+      const res = await fetch('/api/auth/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-User-Token': token },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      const msg = document.getElementById('profile-msg');
+      if (res.ok) {
+        msg.textContent = 'تم الحفظ بنجاح';
+        msg.style.color = '#10ac84';
+        window.currentUser = data.user;
+        document.getElementById('header-name').textContent = data.user.display_name || data.user.username;
+        document.getElementById('header-avatar').src = data.user.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+        pendingAvatar = null;
+        setTimeout(closeProfile, 900);
+      } else {
+        msg.textContent = data.error || 'خطأ';
+        msg.style.color = '#ff6b9d';
+      }
+    }
+
+    document.getElementById('logout-btn').onclick = async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('user_token');
+      await fetch('/api/auth/logout', { method: 'DELETE', headers: { 'X-User-Token': token } });
+      localStorage.removeItem('user_token');
+      location.href = 'auth.html';
+    };
+  </script>
+</body>
+</html>
